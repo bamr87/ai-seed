@@ -278,14 +278,17 @@ class TestGitHubIntegration:
 
     def test_get_repo_info_from_git(self, github_integration):
         """Test extracting repository info from git remote."""
-        with patch('subprocess.run') as mock_run:
-            mock_run.return_value.stdout = "https://github.com/test-owner/test-repo.git\n"
-            mock_run.return_value.returncode = 0
-            
-            owner, repo = github_integration._get_repo_info()
-            
-            assert owner == "test-owner"
-            assert repo == "test-repo"
+        # Clear env so the git-remote fallback path is exercised; otherwise
+        # GITHUB_REPOSITORY (set by GitHub Actions) short-circuits _get_repo_info.
+        with patch.dict('os.environ', {}, clear=True):
+            with patch('subprocess.run') as mock_run:
+                mock_run.return_value.stdout = "https://github.com/test-owner/test-repo.git\n"
+                mock_run.return_value.returncode = 0
+
+                owner, repo = github_integration._get_repo_info()
+
+                assert owner == "test-owner"
+                assert repo == "test-repo"
     
     def test_summarize_structure(self, github_integration):
         """Test repository structure summarization."""
