@@ -9,7 +9,7 @@ import asyncio
 import tempfile
 import yaml
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 import pytest
 
@@ -88,10 +88,9 @@ class TestWorkflowExecution:
             # Mock environment (no LLM keys for fallback testing)
             with patch.dict('os.environ', {}, clear=True):
                 with patch('scripts.triage_failure.Path'):
-                    with patch('builtins.open') as mock_open:
+                    with patch('builtins.open', mock_open(read_data=yaml.dump(mock_config))):
                         with patch('scripts.triage_failure.GitHubIntegration') as mock_gh_class:
                             # Setup mocks
-                            mock_open.return_value.__enter__.return_value.read.return_value = yaml.dump(mock_config)
                             mock_gh = mock_gh_class.return_value
                             mock_gh.get_repository_structure = AsyncMock(return_value={"tree": []})
                             mock_gh.get_recent_commits = AsyncMock(return_value=[])
@@ -193,7 +192,7 @@ class TestWorkflowSecurity:
     
     def test_workflow_secret_usage(self):
         """Test that workflows properly use secrets."""
-        workflow_files = list(Path(__file__).parent.parent / ".github/workflows").glob("*.yml")
+        workflow_files = list((Path(__file__).parent.parent / ".github/workflows").glob("*.yml"))
         
         for workflow_file in workflow_files:
             with open(workflow_file, 'r') as f:
@@ -271,7 +270,7 @@ class TestWorkflowErrorHandling:
     def test_workflow_timeout_protection(self):
         """Test that workflows have reasonable timeout settings."""
         # This is more of a best practice check since timeouts might be implicit
-        workflow_files = list(Path(__file__).parent.parent / ".github/workflows").glob("*.yml")
+        workflow_files = list((Path(__file__).parent.parent / ".github/workflows").glob("*.yml"))
         
         for workflow_file in workflow_files:
             with open(workflow_file, 'r') as f:

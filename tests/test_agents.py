@@ -30,6 +30,26 @@ def sample_evolution_request():
 
 
 @pytest.fixture
+def github_integration(mock_config):
+    """Create GitHub integration with mocked dependencies.
+
+    Module-level so reliability tests outside TestGitHubIntegration can use it.
+    """
+    with patch.dict('os.environ', {'GITHUB_TOKEN': 'test-token'}):
+        integration = GitHubIntegration.__new__(GitHubIntegration)
+        integration.logger = MagicMock()
+        integration.config = mock_config
+        integration.token = 'test-token'
+        integration.base_url = 'https://api.github.com'
+        integration.headers = {
+            'Authorization': 'Bearer test-token',
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+        }
+        return integration
+
+
+@pytest.fixture
 def mock_config():
     """Create a mock configuration for testing."""
     return {
@@ -255,23 +275,7 @@ class TestCrewManager:
 
 class TestGitHubIntegration:
     """Test GitHub API integration functionality."""
-    
-    @pytest.fixture
-    def github_integration(self, mock_config):
-        """Create GitHub integration with mocked dependencies."""
-        with patch.dict('os.environ', {'GITHUB_TOKEN': 'test-token'}):
-            integration = GitHubIntegration.__new__(GitHubIntegration)
-            integration.logger = MagicMock()
-            integration.config = mock_config
-            integration.token = 'test-token'
-            integration.base_url = 'https://api.github.com'
-            integration.headers = {
-                'Authorization': 'Bearer test-token',
-                'Accept': 'application/vnd.github.v3+json',
-                'Content-Type': 'application/json'
-            }
-            return integration
-    
+
     def test_get_repo_info_from_git(self, github_integration):
         """Test extracting repository info from git remote."""
         with patch('subprocess.run') as mock_run:
@@ -338,18 +342,20 @@ class TestGitHubIntegration:
             "base": "main"
         }
         
-        with patch('requests.post') as mock_post:
-            mock_post.return_value.status_code = 201
-            mock_post.return_value.json.return_value = {
-                "number": 456,
-                "html_url": "https://github.com/test/repo/pull/456"
-            }
-            
-            result = await github_integration.create_pull_request(pr_data)
-            
-            assert result["success"] is True
-            assert result["pr_number"] == 456
-            assert "github.com" in result["pr_url"]
+        with patch.object(github_integration, '_get_repo_info', return_value=("test-owner", "test-repo")):
+            with patch('requests.post') as mock_post:
+                mock_post.return_value.status_code = 201
+                mock_post.return_value.json.return_value = {
+                    "number": 456,
+                    "title": "Test PR",
+                    "html_url": "https://github.com/test/repo/pull/456"
+                }
+
+                result = await github_integration.create_pull_request(pr_data)
+
+                assert result["success"] is True
+                assert result["pr_number"] == 456
+                assert "github.com" in result["pr_url"]
     
     @pytest.mark.asyncio
     async def test_comment_on_issue_success(self, github_integration):
@@ -373,15 +379,20 @@ class TestAgentIntegration:
         with patch.dict('os.environ', {'GITHUB_TOKEN': 'test-token'}):
             with patch('agents.orchestrator.CrewManager') as mock_crew:
                 with patch('agents.orchestrator.GitHubIntegration') as mock_github:
-                    # Setup mocks
-                    mock_github_instance = mock_github.return_value
+                    # Use AsyncMock instances so every awaited method on the
+                    # github/crew collaborators is a coroutine by default
+                    # (the orchestrator awaits several context-gathering and
+                    # post-processing methods beyond the ones asserted below).
+                    mock_github_instance = AsyncMock()
+                    mock_github.return_value = mock_github_instance
                     mock_github_instance.create_branch = AsyncMock(return_value=True)
                     mock_github_instance.create_pull_request = AsyncMock(return_value={
                         "success": True,
                         "pr_number": 456
                     })
-                    
-                    mock_crew_instance = mock_crew.return_value
+
+                    mock_crew_instance = AsyncMock()
+                    mock_crew.return_value = mock_crew_instance
                     mock_crew_instance.execute_evolution_workflow = AsyncMock(return_value={
                         "success": True,
                         "planning_summary": "Plan created",

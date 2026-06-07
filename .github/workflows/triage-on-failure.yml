@@ -2,7 +2,7 @@ name: "triage-on-failure"
 
 on:
   workflow_run:
-    workflows: ["CI", "ci-cd-pipeline", "docs-build-deploy", "evolve-on-issue"]
+    workflows: ["CI", "ci-cd-pipeline", "docs-build-deploy", "evolve-on-issue", "scheduled-evolution"]
     types: ["completed"]
 
 permissions:
@@ -14,6 +14,7 @@ jobs:
   triage:
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

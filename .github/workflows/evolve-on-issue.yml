@@ -15,6 +15,7 @@ permissions:
 jobs:
   trigger-evolution:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     if: contains(github.event.issue.labels.*.name, 'evolution') || contains(github.event.issue.title, '[EVOLUTION]')
     
     steps:
