@@ -76,7 +76,7 @@ class CrewManager:
         # Common tools available to all agents
         common_tools = [
             FileReadTool(),
-            FileWriteTool(),
+            FileWriterTool(),
             DirectoryReadTool()
         ]
         
