@@ -34,6 +34,7 @@ Lint with `schema_lint.py` from [bamr87/SCHEMA](https://github.com/bamr87/SCHEMA
 |---|---|---|---|
 | `.github/workflows/seed-germinate.yml` | file | kernel | One-shot germination pass (human-triggered) |
 | `.github/workflows/seed-grow.yml` | file | kernel | Scheduled grow loop (plan→build→verify) |
+| `.github/workflows/seed-evolve.yml` | file | kernel | Issue lane: `seed:approved` label → implementation draft PR |
 | `.github/workflows/seed-steward.yml` | file | kernel | @claude mention handler |
 | `.github/workflows/seed-verify.yml` | file | kernel | Structural gate: schema, parity, tests (CI) |
 
