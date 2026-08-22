@@ -110,7 +110,7 @@ jobs:
       go: ${{ steps.gate.outputs.go }}
       has_pat: ${{ steps.gate.outputs.has_pat }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 1
 
@@ -154,7 +154,7 @@ jobs:
     outputs:
       board_clear: ${{ steps.resurvey.outputs.board_clear }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           persist-credentials: false
