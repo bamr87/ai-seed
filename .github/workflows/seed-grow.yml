@@ -1,5 +1,5 @@
 # =============================================================================
-# seed-grow.yml — the AI-Seed increment loop (kernel v0.5.0)
+# seed-grow.yml — the AI-Seed increment loop (kernel v0.5.1)
 # =============================================================================
 # One tick = one bounded increment = one DRAFT pull request. OFF by default:
 #   1. Idle until the SEED_GROW_ENABLED repo variable is "true" — the variable
@@ -49,6 +49,13 @@ concurrency:
   group: seed-write-${{ github.repository }}
   cancel-in-progress: false
 
+# Dispatch steering is read as `github.event.inputs.focus`, never `inputs.focus`.
+# This workflow has TWO triggers, and the `inputs` context only exists for one of
+# them: on the `schedule` tick there is no `inputs`, so `${{ inputs.focus }}`
+# is an unrecognized named-value and the whole file fails to LOAD — every
+# scheduled run dies as a startup_failure before a single job is created, while
+# workflow_dispatch keeps working and hides it. `github.event.inputs` is defined
+# for both: it carries the value on dispatch and resolves to empty on schedule.
 env:
   # ---- Pass 1: PLAN (no writes beyond the plan file, no commits) -----------
   PLAN_PROMPT: |
@@ -58,7 +65,7 @@ env:
     quality bars. Read CLAUDE.md (the guardrails bind you) and skim the repo
     state. Then select exactly ONE bounded increment for this tick: the
     smallest next step that advances §2, is reviewable in one sitting, and
-    does not touch .github/workflows/**. ${{ inputs.focus }}
+    does not touch .github/workflows/**. ${{ github.event.inputs.focus }}
     Write your selection to .seed/tick-plan.md: the increment, why it is next,
     the files you expect to touch, and how the verify pass should prove it
     works. Do NOT implement it, do NOT commit, do NOT push. Overwrite any
@@ -122,7 +129,7 @@ jobs:
           ENABLED: ${{ vars.SEED_GROW_ENABLED }}
           OAUTH: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          FOCUS: ${{ inputs.focus }}
+          FOCUS: ${{ github.event.inputs.focus }}
         run: |
           set -euo pipefail
           # Dispatch inputs are validated before any step interpolates them.

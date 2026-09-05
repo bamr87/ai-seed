@@ -1,5 +1,5 @@
 # =============================================================================
-# seed-tend.yml — the board-clearing lane (kernel v0.5.0)
+# seed-tend.yml — the board-clearing lane (kernel v0.5.1)
 # =============================================================================
 # THE BOARD PRECONDITION: growth is contingent on a clear board. Every tick
 # tends before it grows — review CI, repair what is red or conflicted, merge
