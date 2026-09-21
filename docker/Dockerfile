@@ -2,7 +2,7 @@
 # Following path-based development and container-first principles
 
 # Base stage with common dependencies
-FROM node:18-alpine AS base
+FROM node:24-alpine AS base
 WORKDIR /app
 
 # Install system dependencies for multiple language support
@@ -79,7 +79,7 @@ EXPOSE 3000
 CMD ["npm", "start", "--prefix", "src"]
 
 # AI Evolution Engine stage
-FROM python:3.11-slim AS ai-engine
+FROM python:3.14-slim AS ai-engine
 WORKDIR /app
 
 # Install system dependencies and update certificates
