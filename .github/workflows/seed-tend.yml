@@ -42,7 +42,7 @@ name: seed-tend
 
 on:
   schedule:
-    - cron: '10 0 * * *'  # daily (was every 6h) + staggered AI cron (bamr87/bamr87#348)
+    - cron: '10 11 * * *'  # daily (was every 6h) + staggered AI cron (bamr87/bamr87#348); was 47 */6 * * *
   workflow_dispatch:
   workflow_call:
     outputs:
